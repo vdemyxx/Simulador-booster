@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Booster (Coleção Secreta)</title>
+    <style>
+	/* --- NOVO: RESPONSIVIDADE PARA CELULAR --- */
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column; /* Empilha os painéis verticalmente */
+                gap: 30px; /* Aumenta a distância entre os painéis empilhados */
+                width: 100%;
+                padding: 0 10px;
+            }
+
+            .panel {
+                flex-basis: 100%; /* Ocupa a largura total */
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .button-group {
+                flex-direction: column; /* Empilha os botões Abrir 1 e Abrir 5 */
+            }
+
+            button {
+                width: 100%; /* Botões ocupam a largura total do painel */
+                padding: 10px;
+            }
+        }
+        /* BASE */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e1e2f;
+            color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #a0f0ff;
+            margin-bottom: 20px;
+            font-size: 2.2em;
+        }
+
+        /* LAYOUT PRINCIPAL (DOIS PAINÉIS) */
+        .main-content {
+            display: flex;
+            justify-content: center;
+            gap: 20px; 
+            width: 90%;
+            max-width: 1200px;
+            margin-top: 20px;
+        }
+        .panel {
+            background-color: #2b2b40;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            flex-basis: 50%; 
+            min-height: 600px;
+        }
+        
+        /* BOTÕES GERAIS */
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #ff6f61;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s;
+        }
+        button:hover {
+            background-color: #e05e55;
+            transform: translateY(-2px);
+        }
+        #openFiveBooster {
+            background-color: #55aaff;
+        }
+        #openFiveBooster:hover {
+            background-color: #4499e0;
+        }
+
+        /* ESTILOS DE COMPRA */
+        .buy-button {
+            background-color: #38b45f;
+            padding: 6px 12px;
+            font-size: 0.9em;
+            margin-top: 0;
+            margin-left: 10px;
+        }
+        .buy-button:hover {
+            background-color: #2c974b;
+        }
+        .buy-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px dotted #444;
+        }
+        .buy-info {
+             flex-grow: 1;
+        }
+        .missing-card-name {
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        /* RESULTADOS DO BOOSTER E COLEÇÃO */
+        #results h2, #collection-panel h2, #shop-panel h2 {
+            font-size: 1.4em;
+            color: #a0f0ff;
+            margin-top: 20px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #3d3d52;
+            margin-bottom: 15px;
+        }
+        
+        /* ESTILO DA CARTA (RESULTADOS) */
+        .card {
+            display: flex;
+            align-items: flex-start; 
+            background-color: #38384a;
+            padding: 8px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border: 2px solid;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.5s ease-out;
+        }
+        .card-image {
+            width: 70px; 
+            height: 70px;
+            border-radius: 6px;
+            margin-right: 15px;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            flex-shrink: 0; 
+        }
+        .card-info {
+            flex-grow: 1;
+        }
+        .card-name {
+            font-size: 1.1em;
+            margin-bottom: 4px;
+        }
+        .rarity-label {
+            font-size: 0.8em;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-weight: normal;
+            margin-left: 10px;
+            vertical-align: top;
+        }
+        
+        .card-effect {
+            font-size: 0.9em;
+            font-weight: normal;
+            color: #ccc;
+            margin-top: 5px;
+            padding-top: 5px;
+            border-top: 1px dashed #444;
+        }
+        .effect-title {
+            color: #a0f0ff;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+
+        /* Cores das Raridades */
+        .C { border-color: #aaa; } 
+        .C .rarity-label { background-color: #555; color: #fff; }
+
+        .I { border-color: #55aaff; } 
+        .I .rarity-label { background-color: #007bff; color: #fff; }
+
+        .R { border-color: #ffcc00; } 
+        .R .rarity-label { background-color: #ffc107; color: #000; }
+
+        .E { border-color: #ff00ff; } 
+        .E .rarity-label { background-color: #dc3545; color: #fff; } 
+        
+        .L { border-color: #00ff88; } 
+        .L .rarity-label { background-color: #00a060; color: #fff; }
+
+        .S { border-color: #8a2be2; } 
+        .S .rarity-label { background-color: #8a2be2; color: #fff; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* COLEÇÃO */
+        #collection-panel h2 {
+            font-size: 1.4em;
+            color: #a0f0ff;
+            border-bottom: 2px solid #3d3d52;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        #collection-summary p {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 1.05em;
+        }
+        .collection-count {
+            font-weight: bold;
+            color: #a0f0ff;
+        }
+        .collection-summary-highlight {
+            color: #00ff88;
+            font-weight: bold;
+        }
+        
+        .collection-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px dotted #444;
+            flex-wrap: wrap; 
+        }
+
+        .collection-info-main {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            min-width: 70%; 
+        }
+        .collection-image {
+            width: 40px; 
+            height: 40px;
+            border-radius: 4px;
+            margin-right: 10px;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            flex-shrink: 0;
+        }
+        .collection-name {
+            font-weight: bold;
+            font-size: 0.9em;
+            width: 100%; 
+        }
+        
+        .collection-effect {
+            font-size: 0.75em;
+            font-weight: normal;
+            color: #999;
+            margin-top: 2px;
+            padding-bottom: 5px;
+            width: 100%; 
+        }
+        .collection-effect-title {
+            color: #55aaff;
+            font-weight: bold;
+        }
+
+        /* Aviso de Conclusão */
+        #completion-message {
+            text-align: center;
+            padding: 15px;
+            background-color: #00a060; 
+            color: white;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            animation: pulse 1.5s infinite alternate;
+        }
+        
+        @keyframes pulse {
+            from { transform: scale(1); opacity: 1; }
+            to { transform: scale(1.02); opacity: 0.9; }
+        }
+
+        /* Nova seção de Pontos */
+        #points-summary {
+            background-color: #3d3d52;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1.2em;
+        }
+        #current-points {
+            color: #ffcc00; 
+            font-weight: bold;
+            font-size: 1.5em;
+        }
+    </style>
+</head>
+<body>
+    <h1>✨ Simulador de Booster: Memórias Maximas </h1>
+
+    <div class="main-content">
+        
+        <div class="panel" id="booster-panel">
+            <h2>Abertura do Pacote</h2>
+            <div id="points-summary">
+                Seus Pontos: <span id="current-points">0</span> ⭐
+            </div>
+            <p>Clique para revelar 8 cartas e adicioná-las à sua coleção (Pode vir uma carta secreta!).</p>
+            
+            <div class="button-group">
+                <button id="openBooster">Abrir 1 Booster!</button>
+                <button id="openFiveBooster">Abrir 5 Boosters!</button>
+            </div>
+
+            <div id="results">
+                <h2>Cartas Reveladas:</h2>
+                <div id="cardList">
+                    <p style="color: #888; text-align: center;">Clique no botão "Abrir Booster!" para começar.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel" id="collection-panel">
+            <h2>🏆 Minha Coleção (Descobertas)</h2>
+            
+            <div id="completion-container"></div> 
+
+            <div id="collection-summary">
+                <p>Booster Abertos: <span id="boosters-opened" class="collection-count">0</span></p>
+                <p>Cartas Únicas Descobertas: <span id="unique-cards" class="collection-summary-highlight">0</span> / <span id="total-unique-cards"></span></p>
+                <p>Total de Cartas: <span id="total-cards" class="collection-count">0</span></p>
+                <hr style="border-color: #444; margin: 10px 0;">
+            </div>
+            <div id="collection-list">
+                <p style="color: #ccc;">Sua coleção está vazia. Abra seu primeiro booster!</p>
+            </div>
+
+            <hr style="border-color: #444; margin: 25px 0 15px 0;">
+            <div id="shop-panel">
+                <h2>🛒 Loja de Cartas Faltantes</h2>
+                <p>Use seus pontos para garantir as cartas que faltam!</p>
+                <div id="missing-cards-list">
+                    <p style="color: #ccc;">Nenhuma carta faltando para a coleção base.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variáveis globais para rastrear o estado do jogo
+        let collection = {};
+        let boostersOpened = 0;
+        let totalCardsCollected = 0;
+        let playerPoints = 0; 
+        
+        // --- 1. Definição das Cartas ---
+        const cards = [
+            // Comuns (C)
+            { id: "C01", name: "Sedução", rarity: "C", imageURL: "images/Seducão.jpg", effect: "Seduza todos os seus amigos." },
+            { id: "C02", name: "Encontro", rarity: "C", imageURL: "images/Encontro.jpeg", effect: "A noite vai ser ainda melhor." },
+            { id: "C03", name: "Amor", rarity: "C", imageURL: "images/Amor.jpg", effect: "O amor vem de diversas formas!" },
+            { id: "C04", name: "Cleyton", rarity: "C", imageURL: "images/Cleyton.jpg", effect: "O bom e velho Cleyton, nesse momento está dirigindo uma moto por aí." },
+            { id: "C05", name: "Bagulhos Estranhos", rarity: "C", imageURL: "images/Bagulhos.jpg", effect: "Bora misturar bis com salada?" },
+            { id: "C06", name: "Boina", rarity: "C", imageURL: "images/Boina.jpg", effect: "Você está de boina hoje?" },
+			{ id: "C07", name: "Diversão", rarity: "C", imageURL: "images/Parque2.jpg", effect: "Ficamos molhadinhos nessa foto!" },
+			{ id: "C08", name: "Cu", rarity: "C", imageURL: "images/Cu.jpg", effect: "Bem vindos ao meu Cu!" },
+			{ id: "C09", name: "Prisão", rarity: "C", imageURL: "images/Preso.jpg", effect: "Uma das pessoas dessa foto está preso nesse exato momento!" },
+			{ id: "C10", name: "Toca uma para mim", rarity: "C", imageURL: "images/Top.jpg", effect: "O Gabs tocou uma para a gente lá na Casa Top!" },
+			{ id: "C11", name: "Rebola", rarity: "C", imageURL: "images/Hummm.jpg", effect: "Gabs sempre rebolando!" },
+			{ id: "C12", name: "Casal", rarity: "C", imageURL: "images/Casal.jpg", effect: "O casal mais bonito que já vi!" },
+			{ id: "C13", name: "Fogueira", rarity: "C", imageURL: "images/Fogo.jpg", effect: "Ver a lua e comer marshmallow na fogueira!" },
+			{ id: "C14", name: "Converter", rarity: "C", imageURL: "images/Converter.jpg", effect: "Posso converter ele?" },
+
+            // Incomuns (I)
+            { id: "I01", name: "Pai e Filho", rarity: "I", imageURL: "images/Fam.jpeg", effect: "Tal Pai, Tal Filho." },
+            { id: "I02", name: "Café da Gatos", rarity: "I", imageURL: "images/Gatos.jpg", effect: "MEOW!" },
+            { id: "I03", name: "Tia Prih", rarity: "I", imageURL: "images/Tia.jpg", effect: "Vem cá que a Tia Prih te ajuda!" },
+            { id: "I04", name: "Arremesar", rarity: "I", imageURL: "images/Parque3.jpg", effect: "Posso arremessar o cachorro? Ou o gabs mesmo, também funciona." },
+			{ id: "I05", name: "Cookie", rarity: "I", imageURL: "images/Cookie.jpg", effect: "Ele está sempre te julgando!" },
+			{ id: "I06", name: "Roles", rarity: "I", imageURL: "images/Roles.jpg", effect: "Vários roles aleatórios! E várias Rolas também!" },
+			{ id: "I07", name: "Carinho", rarity: "I", imageURL: "images/Carinho.jpg", effect: "Me de carinho, humano!" },
+			
+            // Raras (R)
+            { id: "R01", name: "O Primeiro Disco", rarity: "R", imageURL: "images/CD.jpg", effect: "Tente falar Wake me Up! no timing certo." },
+            { id: "R02", name: "Dupla Dinâmica", rarity: "R", imageURL: "images/Dupla.jpeg", effect: "Ande 5 minutos com o Cookie e ele desiste." },
+            { id: "R03", name: "Encontro com Rodolfo", rarity: "R", imageURL: "images/Rodolfo.jpg", effect: "Um encontro as cegas com o anão mais amado do grupo. (Interpretado pelo Gustavo)" },
+			{ id: "R04", name: "Ceifador", rarity: "R", imageURL: "images/Ceifador.jpg", effect: "As lentes brancas dele dão medo em crianças até hoje." },
+			{ id: "R05", name: "Aniversário do Hanchen", rarity: "R", imageURL: "images/Niver.jpg", effect: "E logo chega mais um ano, passa tão rápido!" },
+			{ id: "R06", name: "Viagem", rarity: "R", imageURL: "images/Viagem.jpg", effect: "Nossa primeira viagem juntos!" },
+            { id: "R07", name: "Hanchen Bebê 1", rarity: "R", imageURL: "images/Bebe.jpg", effect: "E parece que foi ontem!" },
+			{ id: "R08", name: "Hanchen Bebê 2", rarity: "R", imageURL: "images/Bebe2.jpeg", effect: "E parece que foi ontem!" },
+			
+            // Épicas (E)
+            { id: "E01", name: "Show da Prih", rarity: "E", imageURL: "images/Show.jpeg", effect: "O Gustavo está meio diferente nessa foto." },
+            { id: "E02", name: "Sexo", rarity: "E", imageURL: "images/Sexo.jpg", effect: "Ih! Sexo!" },
+			{ id: "E03", name: "Cozinheiro", rarity: "E", imageURL: "images/Cozinheiro.jpg", effect: "Você cozinha como eu cuzinho?" },
+			{ id: "E04", name: "Minecraft", rarity: "E", imageURL: "images/Mine.jpg", effect: "Uma boa jogatina de Mine! Pera? A Prih chegou a tempo?" },
+			{ id: "E05", name: "Ai que Delícia", rarity: "E", imageURL: "images/Ai.jpg", effect: "É muita sedução para um momento só!" },
+			{ id: "E06", name: "Remada", rarity: "E", imageURL: "images/Rema.jpg", effect: "Foi muita coragem para remar tão longe!" },
+			{ id: "E07", name: "Escola da Prih", rarity: "E", imageURL: "images/Escola.jpg", effect: "Quantas vezes se reunimos na antiga escola da Tia Ka?" },
+			
+            // LENDÁRIAS (L)
+            { id: "L01", name: "Cara de Sapeca", rarity: "L", imageURL: "images/Sapeca.jpeg", effect: "Está se preparando para aprontar algo. Ou apenas gritar bem alto mesmo." },
+            { id: "L02", name: "Gustado Sedutor", rarity: "L", imageURL: "images/Vestido.jpg", effect: "Espero que eixo entre do seu cu, mas com muito carinho!" },
+			{ id: "L03", name: "Wet N' Wild", rarity: "L", imageURL: "images/Parque.jpg", effect: "Até mesmo o GPT achou essa imagem muito sensual!" },
+			{ id: "L04", name: "Cookie Filhote", rarity: "L", imageURL: "images/Filhote.jpg", effect: "Te julgando desde seu nascimento!" },
+			{ id: "L05", name: "Cleide", rarity: "L", imageURL: "images/Cleide.jpg", effect: "Esse café está gostoso, não é mesmo Cleide?" },
+			{ id: "L06", name: "Venda", rarity: "L", imageURL: "images/Venda.jpg", effect: "Pai, porque estão vendendo essa Árvore?" },
+			{ id: "L07", name: "Agenvers", rarity: "L", imageURL: "images/Agenvers.jpeg", effect: "Bora assistir os Vingadores juntos?" },
+			
+            // SECRETA (S)
+            { id: "S01", name: "Almoço", rarity: "S", imageURL: "images/Almoço.jpg", effect: "Comer vocês é sempre uma delícia!" },
+            { id: "S02", name: "Cookie Modo Divino", rarity: "S", imageURL: "images/Divino.jpeg", effect: "Ele está julgando os seus pecados agora!" },
+			{ id: "S03", name: "Antônio Warden", rarity: "S", imageURL: "images/Warden.jpeg", effect: "A Fantasia de Halloween mais bem feita da história!" },
+			{ id: "S04", name: "Casa Rosa", rarity: "S", imageURL: "images/Rosa.jpg", effect: "Memorável, quase voltamos com um pé a menos!" },
+			{ id: "S05", name: "Cadê a minha comida?", rarity: "S", imageURL: "images/Humano.jpg", effect: "Você abrindo boosters e esqueceu de me dar comida?" },
+			{ id: "S06", name: "Tokyo", rarity: "S", imageURL: "images/Tokyo.jpeg", effect: "E de se imaginar que o Gustavo estava lá no dia anterior?" },
+			{ id: "S07", name: "Rafashi", rarity: "S", imageURL: "images/Rafashi.jpg", effect: "Memórias devem ser preservadas!" },
+			{ id: "S08", name: "Hanchen", rarity: "S", imageURL: "images/Hanchen.jpeg", effect: "Ele cresce cada vez mais!" },
+        ];
+        
+        const NON_SECRET_CARDS = cards.filter(card => card.rarity !== 'S');
+        const TOTAL_UNIQUE_CARDS = NON_SECRET_CARDS.length;
+
+        // Tabela de Ganhos e Custos (Sistema de Pontos)
+        const RARITY_POINTS = { 'C': 1, 'I': 2, 'R': 4, 'E': 8, 'L': 16, 'S': 50 };
+        const RARITY_COSTS = { 'C': 20, 'I': 50, 'R': 150, 'E': 350, 'L': 700 };
+
+
+        // Mapeamento de elementos HTML
+        const cardListElement = document.getElementById('cardList');
+        const openButton = document.getElementById('openBooster');
+        const openFiveButton = document.getElementById('openFiveBooster'); // NOVO
+        const collectionListElement = document.getElementById('collection-list');
+        const boostersOpenedElement = document.getElementById('boosters-opened');
+        const totalCardsElement = document.getElementById('total-cards');
+        const completionContainerElement = document.getElementById('completion-container');
+        const uniqueCardsElement = document.getElementById('unique-cards');
+        const totalUniqueCardsElement = document.getElementById('total-unique-cards');
+        const currentPointsElement = document.getElementById('current-points'); 
+        const missingCardsListElement = document.getElementById('missing-cards-list'); 
+
+        // Inicialização da Coleção
+        cards.forEach(card => {
+            collection[card.id] = 0;
+        });
+
+        const getCardsByRarity = (rarity) => cards.filter(card => card.rarity === rarity);
+        const getCardById = (id) => cards.find(card => card.id === id);
+
+
+        // --- 2. Lógica de Sorteio do Booster (Separada da lógica de coleção) ---
+        
+        function drawCardByRarity(rarity) {
+            const pool = getCardsByRarity(rarity);
+            if (pool.length === 0) return null;
+            const index = Math.floor(Math.random() * pool.length);
+            return pool[index];
+        }
+
+        function drawSecretCard() {
+            if (Math.random() < 0.05) { 
+                const secretCards = getCardsByRarity('S');
+                if (secretCards.length > 0) {
+                    const index = Math.floor(Math.random() * secretCards.length);
+                    return secretCards[index];
+                }
+            }
+            return null;
+        }
+
+        function drawBoosterCards() {
+            let drawnCards = [];
+            let totalCards = 8;
+            
+            const rollRarity = Math.random();
+            let guaranteedRarity = "R"; 
+
+            if (rollRarity < 0.02) { 
+                guaranteedRarity = "L";
+            } else if (rollRarity < 0.07) { 
+                guaranteedRarity = "E";
+            } else if (rollRarity < 0.25) { 
+                guaranteedRarity = "R";
+            } else {
+                guaranteedRarity = "I";
+            }
+            
+            drawnCards.push(drawCardByRarity(guaranteedRarity));
+            totalCards--;
+
+            for (let i = 0; i < 2; i++) {
+                const roll = Math.random();
+                const rarity = roll < 0.7 ? "I" : "C";
+                drawnCards.push(drawCardByRarity(rarity));
+                totalCards--;
+            }
+
+            for (let i = 0; i < totalCards; i++) {
+                drawnCards.push(drawCardByRarity("C"));
+            }
+
+            const secretCard = drawSecretCard();
+            if (secretCard) {
+                drawnCards.push(secretCard);
+            }
+
+            return drawnCards.sort(() => Math.random() - 0.5);
+        }
+
+        // --- 3. Lógica de Pontos e Coleção ---
+        
+        function gainPoints(card) {
+            const points = RARITY_POINTS[card.rarity] || 0;
+            playerPoints += points;
+            currentPointsElement.textContent = playerPoints;
+        }
+
+        function processDrawnCards(newCards) {
+            boostersOpened++;
+            totalCardsCollected += newCards.length;
+
+            newCards.forEach(card => {
+                if (card && card.id) {
+                    collection[card.id]++;
+                    gainPoints(card); 
+                }
+            });
+
+            displayCollection();
+            displayMissingCards(); 
+            checkCollectionCompletion(); 
+        }
+
+        // NOVO: Gerencia a abertura de 1 ou mais boosters
+        function handleBoosterOpening(numBooster) {
+            cardListElement.innerHTML = ''; // Limpa os resultados antes de começar
+            let allDrawnCards = [];
+            let cardsPerBooster = 8; 
+
+            for (let i = 0; i < numBooster; i++) {
+                const drawnCards = drawBoosterCards();
+                allDrawnCards.push(...drawnCards);
+                processDrawnCards(drawnCards); // Atualiza estatísticas e pontos para cada booster
+            }
+            
+            // Exibe todos os resultados de uma vez
+            displayResults(allDrawnCards, numBooster);
+        }
+        
+        function buyCard(cardId) {
+            const card = getCardById(cardId);
+            if (!card || card.rarity === 'S') return; 
+
+            const cost = RARITY_COSTS[card.rarity];
+            
+            if (playerPoints >= cost) {
+                playerPoints -= cost;
+                collection[cardId]++;
+                totalCardsCollected++;
+
+                alert(`Você comprou 1x ${card.name} por ${cost} pontos!`);
+                
+                // Atualiza todas as exibições
+                currentPointsElement.textContent = playerPoints;
+                displayCollection();
+                displayMissingCards(); 
+
+            } else {
+                alert(`Pontos insuficientes! Você precisa de ${cost} pontos para comprar a carta ${card.name}.`);
+            }
+        }
+        
+        function displayMissingCards() {
+            missingCardsListElement.innerHTML = '';
+            let missingCount = 0;
+            
+            NON_SECRET_CARDS.sort((a, b) => RARITY_COSTS[b.rarity] - RARITY_COSTS[a.rarity]).forEach(card => {
+                if (collection[card.id] === 0) {
+                    missingCount++;
+                    const cost = RARITY_COSTS[card.rarity];
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'buy-item';
+
+                    const infoDiv = document.createElement('div');
+                    infoDiv.className = 'buy-info';
+                    infoDiv.innerHTML = `<span class="missing-card-name ${card.rarity}" style="color: ${getRarityColor(card.rarity)};">${card.name}</span> (${getRarityFullName(card.rarity)})`;
+
+                    const buyContainer = document.createElement('div');
+                    
+                    const costSpan = document.createElement('span');
+                    costSpan.textContent = `${cost} Pontos`;
+                    costSpan.style.marginRight = '10px';
+                    costSpan.style.color = '#ffcc00';
+
+                    const buyButton = document.createElement('button');
+                    buyButton.className = 'buy-button';
+                    buyButton.textContent = 'Comprar';
+                    buyButton.disabled = playerPoints < cost;
+                    buyButton.onclick = () => buyCard(card.id);
+
+                    buyContainer.appendChild(costSpan);
+                    buyContainer.appendChild(buyButton);
+                    
+                    itemDiv.appendChild(infoDiv);
+                    itemDiv.appendChild(buyContainer);
+                    missingCardsListElement.appendChild(itemDiv);
+                }
+            });
+
+            if (missingCount === 0) {
+                 missingCardsListElement.innerHTML = `<p style="color: #00ff88; font-weight: bold; text-align: center;">Coleção Base Completa! Não há cartas para comprar.</p>`;
+            }
+        }
+
+        function checkCollectionCompletion() {
+            let uniqueCardsCollected = 0;
+            
+            NON_SECRET_CARDS.forEach(card => {
+                if (collection[card.id] > 0) {
+                    uniqueCardsCollected++;
+                }
+            });
+
+            uniqueCardsElement.textContent = uniqueCardsCollected;
+            totalUniqueCardsElement.textContent = TOTAL_UNIQUE_CARDS;
+            
+            if (uniqueCardsCollected === TOTAL_UNIQUE_CARDS) {
+                completionContainerElement.innerHTML = `
+                    <div id="completion-message">
+                        🎉 PARABÉNS! COLEÇÃO COMPLETA! Estaremos aqui para ainda mais memórias no futuro! Parabéns Maxito! OBS: Tem 8 cartas secretas ao todo! 🎉
+                    </div>
+                `;
+            } else {
+                completionContainerElement.innerHTML = '';
+            }
+        }
+
+        function displayCollection() {
+            boostersOpenedElement.textContent = boostersOpened;
+            totalCardsElement.textContent = totalCardsCollected;
+            
+            collectionListElement.innerHTML = '';
+            
+            const sortedCards = cards.sort((a, b) => {
+                const rarityOrder = { 'S': 6, 'L': 5, 'E': 4, 'R': 3, 'I': 2, 'C': 1 };
+                return rarityOrder[b.rarity] - rarityOrder[a.rarity];
+            });
+
+            let collectedItemsRendered = 0;
+            sortedCards.forEach(card => {
+                const count = collection[card.id];
+                
+                // *** Apenas exibe se a carta foi coletada (count > 0) ***
+                if (count > 0) { 
+                    collectedItemsRendered++;
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = `collection-item`;
+                    
+                    const mainInfoDiv = document.createElement('div');
+                    mainInfoDiv.className = 'collection-info-main';
+                    
+                    const img = document.createElement('img');
+                    img.src = card.imageURL;
+                    img.alt = card.name;
+                    img.className = 'collection-image';
+                    
+                    const textContainer = document.createElement('div');
+                    textContainer.style.flexGrow = 1;
+
+                    const nameSpan = document.createElement('div');
+                    nameSpan.className = `collection-name ${card.rarity}`;
+                    nameSpan.textContent = `${card.name} (${getRarityFullName(card.rarity)})`;
+                    nameSpan.style.color = getRarityColor(card.rarity); 
+                    
+                    // Efeito na Coleção
+                    if (card.effect) {
+                        const effectDiv = document.createElement('div');
+                        effectDiv.className = 'collection-effect';
+                        effectDiv.innerHTML = `<span class="collection-effect-title">Efeito:</span> ${card.effect}`;
+                        textContainer.appendChild(effectDiv);
+                    }
+
+                    textContainer.prepend(nameSpan); 
+                    mainInfoDiv.appendChild(img);
+                    mainInfoDiv.appendChild(textContainer);
+                    
+                    const countSpan = document.createElement('span');
+                    countSpan.className = 'collection-count';
+                    countSpan.textContent = `x${count}`;
+                    countSpan.style.color = '#a0f0ff'; 
+                    
+                    itemDiv.appendChild(mainInfoDiv);
+                    itemDiv.appendChild(countSpan);
+                    collectionListElement.appendChild(itemDiv);
+                }
+            });
+            
+            if (collectedItemsRendered === 0) {
+                collectionListElement.innerHTML = `<p style="color: #ccc;">Sua coleção está vazia. Abra seu primeiro booster!</p>`;
+            }
+
+            checkCollectionCompletion(); 
+        }
+
+        // --- 4. Exibição dos Resultados (Modificada para lotes) ---
+        function displayResults(cards, numBooster) {
+            
+            const title = numBooster > 1 ? `Resultados de ${numBooster} Boosters:` : 'Carta Revelada:';
+            
+            cardListElement.innerHTML = `<h2>${title}</h2>`; 
+            
+            cards.forEach(card => {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = `card ${card.rarity}`;
+                
+                const img = document.createElement('img');
+                img.src = card.imageURL;
+                img.alt = card.name;
+                img.className = 'card-image';
+                
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'card-info';
+                
+                const headerDiv = document.createElement('div');
+                headerDiv.style.display = 'flex';
+                headerDiv.style.alignItems = 'center';
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'card-name';
+                nameSpan.textContent = card.name;
+                
+                const rarityLabel = document.createElement('span');
+                rarityLabel.className = 'rarity-label';
+                rarityLabel.textContent = getRarityFullName(card.rarity);
+                
+                headerDiv.appendChild(nameSpan);
+                headerDiv.appendChild(rarityLabel);
+                infoDiv.appendChild(headerDiv);
+
+                if (card.effect) {
+                    const effectDiv = document.createElement('div');
+                    effectDiv.className = 'card-effect';
+                    effectDiv.innerHTML = `<span class="effect-title">Efeito:</span> ${card.effect}`;
+                    infoDiv.appendChild(effectDiv);
+                }
+
+                cardDiv.appendChild(img);
+                cardDiv.appendChild(infoDiv);
+                
+                cardListElement.appendChild(cardDiv);
+            });
+        }
+        
+        // Funções auxiliares (Mantidas)
+        function getRarityFullName(initial) {
+            switch(initial) {
+                case 'C': return 'Comum';
+                case 'I': return 'Incomum';
+                case 'R': return 'Rara';
+                case 'E': return 'Épica';
+                case 'L': return 'Lendária';
+                case 'S': return 'SECRETA';
+                default: return '???';
+            }
+        }
+        
+        function getRarityColor(initial) {
+            switch(initial) {
+                case 'C': return '#aaa';
+                case 'I': return '#55aaff';
+                case 'R': return '#ffcc00';
+                case 'E': return '#ff00ff';
+                case 'L': return '#00ff88'; 
+                case 'S': return '#8a2be2'; 
+                default: return '#f0f0f0';
+            }
+        }
+
+        // --- 5. Inicialização ---
+        totalUniqueCardsElement.textContent = TOTAL_UNIQUE_CARDS;
+        currentPointsElement.textContent = playerPoints; 
+        
+        // Atribui as novas funções aos botões
+        openButton.addEventListener('click', () => handleBoosterOpening(1));
+        openFiveButton.addEventListener('click', () => handleBoosterOpening(5)); 
+
+        displayCollection(); 
+        displayMissingCards();
+    </script>
+</body>
+</html>
